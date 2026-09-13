@@ -1,5 +1,12 @@
-import { InlineKeyboard } from 'grammy';
+import { InlineKeyboard, Keyboard } from 'grammy';
 import { Package } from '../types';
+
+export function getContactKeyboard(): Keyboard {
+  return new Keyboard()
+    .requestContact('📱 Поділитися контактом')
+    .resized()
+    .oneTime();
+}
 
 export function getMainMenuKeyboard(isPaid = false): InlineKeyboard {
   const keyboard = new InlineKeyboard()

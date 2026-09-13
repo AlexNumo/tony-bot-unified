@@ -19,18 +19,26 @@ export async function handleContactMessage(ctx: Context): Promise<void> {
 
   if (paidStatus) {
     const successMsg = 
-      `🎉 <b>Вашу оплату на сайті успішно знайдено та підтверджено!</b>\n\n` +
-      `Тариф: <b>${paidStatus.toUpperCase()}</b>.\n` +
-      `Преміум-доступ до курсу відкрито назавжди. Надсилаємо матеріали... ✨`;
-    await ctx.reply(successMsg, { parse_mode: 'HTML' });
+      `🎉 <b>Ваша оплата на сайті успішно знайдена в базі даних!</b>\n\n` +
+      `Пакет: <b>${paidStatus.toUpperCase()}</b>.\n` +
+      `Надсилаємо вам ваші матеріали та 1-й день... 👇`;
+    await ctx.reply(successMsg, { parse_mode: 'HTML', reply_markup: { remove_keyboard: true } });
     await saveMessage(userId, 'bot', successMsg);
 
     // Send workbooks & first day lesson
     sendPurchaseMaterialsToUser(ctx.api as any, userId).catch(console.error);
     await sendDayMaterial(ctx.api as any, userId, 1);
+    
+    // Show main menu
+    const { handleStartCommand } = require('./start');
+    await handleStartCommand(ctx);
   } else {
-    const ackMsg = `✅ Дякуємо! Ваш номер телефону <b>${phoneNumber}</b> успішно збережено в системі.`;
-    await ctx.reply(ackMsg, { parse_mode: 'HTML' });
+    const ackMsg = `✅ Дякуємо! Ваш номер телефону <b>${phoneNumber}</b> збережено.`;
+    await ctx.reply(ackMsg, { parse_mode: 'HTML', reply_markup: { remove_keyboard: true } });
     await saveMessage(userId, 'bot', ackMsg);
+    
+    // Trigger the start flow so they see the main menu
+    const { handleStartCommand } = require('./start');
+    await handleStartCommand(ctx);
   }
 }

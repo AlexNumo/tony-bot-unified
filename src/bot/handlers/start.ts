@@ -1,6 +1,6 @@
 import { Context } from 'grammy';
 import { addUser, getUserData, updateUserStatus, saveMessage } from '../../services/supabase';
-import { getMainMenuKeyboard } from '../keyboards';
+import { getMainMenuKeyboard, getContactKeyboard } from '../keyboards';
 import { sendPurchaseMaterialsToUser } from '../materials';
 import { sendDayMaterial } from './day';
 
@@ -60,8 +60,16 @@ export async function handleStartCommand(ctx: Context): Promise<void> {
     return;
   }
 
-  // 5. Check if user has an active paid subscription
+  // 5. Require phone number
   const userData = await getUserData(userId);
+  if (!userData?.phone) {
+    const contactMsg = "📱 Будь ласка, натисніть кнопку нижче, щоб поділитися номером телефону.\nЦе обов'язково для доступу до матеріалів.";
+    await ctx.reply(contactMsg, { reply_markup: getContactKeyboard() });
+    await saveMessage(userId, 'bot', contactMsg);
+    return;
+  }
+
+  // 6. Check if user has an active paid subscription
   const status = userData?.status || 'free';
   const isPaid = ['base', 'support', 'vip'].includes(status);
 
