@@ -107,14 +107,14 @@ export async function sendDayMaterial(botOrApi: any, userId: number | string, da
     }
   }
 
-  // 4. Send PDF Workbook (by file_id or local file)
+  // 4. Send PDF Workbook/Presentation (by file_id or local file)
   if (lesson.pdfFileId) {
     try {
       await api.sendDocument(uId, lesson.pdfFileId, {
-        caption: `📄 Робочий зошит до Дня ${dayNum}`,
+        caption: `📄 Презентація до Дня ${dayNum}`,
         protect_content: true
       });
-      await saveMessage(uId, 'bot', `[Надіслано PDF Дня ${dayNum}]`);
+      await saveMessage(uId, 'bot', `[Надіслано PDF-презентацію для Дня ${dayNum}]`);
     } catch (err) {
       console.error(`Failed to send PDF for day ${dayNum}:`, err);
     }
