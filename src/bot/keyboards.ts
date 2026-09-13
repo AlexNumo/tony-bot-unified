@@ -49,12 +49,10 @@ export function getProgramMenuKeyboard(): InlineKeyboard {
 
 export function getProgramDayKeyboard(dayNum: number): InlineKeyboard {
   return new InlineKeyboard()
-    .text(`📅 Отримати матеріали Дня ${dayNum}`, `send_lesson_${dayNum}`)
+    .text('🔙 До програми', 'program_menu')
+    .text('💎 Пакети', 'packages_menu')
     .row()
-    .text('↩️ До програми', 'program_menu')
-    .text('💳 Тарифи та запис', 'packages_menu')
-    .row()
-    .text('↩️ Головне меню', 'main_menu');
+    .text('🏠 Головне меню', 'main_menu');
 }
 
 export function getPackagesKeyboard(packages: Package[]): InlineKeyboard {

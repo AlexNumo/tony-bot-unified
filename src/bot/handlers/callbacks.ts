@@ -94,11 +94,7 @@ export async function handleCallbacks(ctx: Context): Promise<void> {
     }
   }
 
-  // 6. Request Day Lesson Send
-  else if (data.startsWith('send_lesson_')) {
-    const dayNum = parseInt(data.replace('send_lesson_', ''));
-    await sendDayMaterial(ctx.api as any, userId, dayNum);
-  }
+  // 6. Request Day Lesson Send (REMOVED: Users should wait for automated scheduler or use commands)
 
   // 7. About Author
   else if (data === 'about_author') {
