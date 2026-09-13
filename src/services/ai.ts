@@ -84,6 +84,32 @@ export function buildSystemPrompt(username: string): string {
 3. Якщо користувачка просить покликати Антоніну чи зв'язати з нею особисто («хочу поговорити з Антоніною», «поклич Антоніну»), ввічливо дай відповідь і ОБОВ'ЯЗКОВО додай тег [CALL_HUMAN] на новому рядку для виклику автора.`;
 }
 
+// Candidates for Groq in order of priority:
+// llama-3.1-8b-instant is universally available on all free Groq accounts.
+const GROQ_CANDIDATE_MODELS = [
+  process.env.GROQ_MODEL,
+  'llama-3.1-8b-instant',
+  'llama-3.3-70b-versatile',
+  'llama-3.1-70b-versatile',
+  'llama3-8b-8192',
+  'llama3-70b-8192',
+  'mixtral-8x7b-32768',
+  'gemma2-9b-it'
+].filter(Boolean) as string[];
+
+// Candidates for Gemini in order of priority:
+const GEMINI_CANDIDATE_MODELS = [
+  process.env.GEMINI_MODEL,
+  'gemini-2.0-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+  'gemini-pro'
+].filter(Boolean) as string[];
+
+let cachedWorkingGroqModel: string | null = null;
+let cachedWorkingGeminiModel: string | null = null;
+
 export async function generateAiResponse(
   username: string,
   userMessage: string,
@@ -91,58 +117,83 @@ export async function generateAiResponse(
 ): Promise<string> {
   const systemInstruction = buildSystemPrompt(username);
 
-  // 1. Try Groq (Llama-3.3-70b-versatile)
+  // 1. Try Groq with model fallback
   if (groqClient) {
-    try {
-      const messages: any[] = [{ role: 'system', content: systemInstruction }];
-      if (history && history.length > 0) {
-        for (const h of history.slice(-6)) {
-          const role = h.sender === 'user' ? 'user' : 'assistant';
-          messages.push({ role, content: h.text.replace('[CALL_HUMAN]', '').trim() });
-        }
+    const messages: any[] = [{ role: 'system', content: systemInstruction }];
+    if (history && history.length > 0) {
+      for (const h of history.slice(-6)) {
+        const role = h.sender === 'user' ? 'user' : 'assistant';
+        messages.push({ role, content: h.text.replace('[CALL_HUMAN]', '').trim() });
       }
-      messages.push({ role: 'user', content: userMessage });
+    }
+    messages.push({ role: 'user', content: userMessage });
 
-      const completion = await groqClient.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        messages,
-        temperature: 0.6,
-        max_tokens: 300
-      });
+    const modelsToTry = cachedWorkingGroqModel 
+      ? [cachedWorkingGroqModel, ...GROQ_CANDIDATE_MODELS.filter(m => m !== cachedWorkingGroqModel)]
+      : GROQ_CANDIDATE_MODELS;
 
-      const reply = completion.choices[0]?.message?.content?.trim();
-      if (reply) return reply;
-    } catch (groqErr) {
-      console.warn('Groq API error, falling back to Gemini:', groqErr);
+    for (const modelName of modelsToTry) {
+      try {
+        const completion = await groqClient.chat.completions.create({
+          model: modelName,
+          messages,
+          temperature: 0.6,
+          max_tokens: 300
+        });
+
+        const reply = completion.choices[0]?.message?.content?.trim();
+        if (reply) {
+          if (cachedWorkingGroqModel !== modelName) {
+            console.log(`🤖 Groq AI active using model: ${modelName}`);
+            cachedWorkingGroqModel = modelName;
+          }
+          return reply;
+        }
+      } catch (groqErr: any) {
+        console.warn(`Groq error with model ${modelName}:`, groqErr?.message || groqErr);
+      }
     }
   }
 
-  // 2. Fallback to Gemini
-  if (geminiClient) {
-    try {
-      const model = geminiClient.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-        systemInstruction
-      });
-
-      let promptWithContext = '';
-      if (history && history.length > 0) {
-        promptWithContext += 'Контекст попередніх повідомлень:\n';
-        for (const h of history.slice(-4)) {
-          promptWithContext += `${h.sender === 'user' ? 'Користувачка' : 'Антоніна'}: ${h.text}\n`;
-        }
-        promptWithContext += '\nНове повідомлення:\n';
+  // 2. Fallback to Gemini with model fallback
+  if (geminiClient && GEMINI_API_KEY) {
+    let promptWithContext = '';
+    if (history && history.length > 0) {
+      promptWithContext += 'Контекст попередніх повідомлень:\n';
+      for (const h of history.slice(-4)) {
+        promptWithContext += `${h.sender === 'user' ? 'Користувачка' : 'Антоніна'}: ${h.text}\n`;
       }
-      promptWithContext += `${username}: ${userMessage}`;
+      promptWithContext += '\nНове повідомлення:\n';
+    }
+    promptWithContext += `${username}: ${userMessage}`;
 
-      const result = await model.generateContent(promptWithContext);
-      const reply = result.response.text()?.trim();
-      if (reply) return reply;
-    } catch (geminiErr) {
-      console.warn('Gemini API error, using hardcoded fallback:', geminiErr);
+    const modelsToTry = cachedWorkingGeminiModel
+      ? [cachedWorkingGeminiModel, ...GEMINI_CANDIDATE_MODELS.filter(m => m !== cachedWorkingGeminiModel)]
+      : GEMINI_CANDIDATE_MODELS;
+
+    for (const modelName of modelsToTry) {
+      try {
+        const model = geminiClient.getGenerativeModel({
+          model: modelName,
+          systemInstruction
+        });
+
+        const result = await model.generateContent(promptWithContext);
+        const reply = result.response.text()?.trim();
+        if (reply) {
+          if (cachedWorkingGeminiModel !== modelName) {
+            console.log(`🤖 Gemini AI active using model: ${modelName}`);
+            cachedWorkingGeminiModel = modelName;
+          }
+          return reply;
+        }
+      } catch (geminiErr: any) {
+        console.warn(`Gemini error with model ${modelName}:`, geminiErr?.message || geminiErr);
+      }
     }
   }
 
   // 3. Graceful human-escalation fallback
+  console.warn('⚠️ All AI models failed, using human escalation fallback');
   return `Дякую за твоє повідомлення! Я обов'язково відповім тобі особисто найближчим часом. Зберігай спокій, зроби глибокий вдих. Я поруч. 🙏\n[CALL_HUMAN]`;
 }
