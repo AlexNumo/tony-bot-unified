@@ -5,11 +5,11 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // Persistent Telegram file_ids for Workbooks and Bonus Gifts
 // Content protection is intentionally NOT enabled for workbooks/gifts so users can download and print them.
 export const BONUS_MATERIALS_FILE_IDS = {
-  WORKBOOK_1: 'BQACAgIAAxkDAAIB6mqnAcL5jxEwi5v3aU-Mwztb_6gmAALpqAACXlU5Sb2hZKv6HhZyPQQ',
-  WORKBOOK_2: 'BQACAgIAAxkDAAIB62qnAdQeIkPUR51U66o_x7teevS5AALqqAACXlU5SW8gSUk-AAE0QD0E',
-  GIFT_1: 'BQACAgIAAxkDAAIB7GqnAd2Wqf_qb8LvF53CVKi3xtsLAALtqAACXlU5SbhHFPTBcQWIPQQ',
-  GIFT_2: 'BQACAgIAAxkDAAIB7WqnAel6ac8mN949dDLJvYKv1o-0AALvqAACXlU5SV7idxMq0MM1PQQ',
-  GIFT_3: 'CQACAgIAAxkDAAIB7mqnAfDmh8Tvo6w1ynIpT8o7p8DdAALwqAACXlU5Sd5hj_g7zRcPPQQ'
+  WORKBOOK_1: 'BQACAgIAAxkDAAPZaqcGcM-QAAFZ50-Z4DNw4HRVaIMXAAJlswAC3BU5Sb85YT-viIFLPQQ',
+  WORKBOOK_2: 'BQACAgIAAxkDAAPaaqcGfyY3zOlLhp4IVuCwV9Eu0o8AAmazAALcFTlJISlWTvTZols9BA',
+  GIFT_1: 'BQACAgIAAxkDAAPbaqcGikJS60uE3wXFAAHCXk-w7OrjAAJnswAC3BU5SVHt0RH45ONFPQQ',
+  GIFT_2: 'BQACAgIAAxkDAAPcaqcGlrfWfQ83uU6Tn22D_cvxQL0AAmmzAALcFTlJjNy8R3zN9mQ9BA',
+  GIFT_3: 'CQACAgIAAxkDAAPdaqcGnV6OYemvgRS2_iZTLykelisAAmuzAALcFTlJcacAAUG26UgzPQQ'
 };
 
 /**
