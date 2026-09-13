@@ -85,9 +85,10 @@ export function buildSystemPrompt(username: string): string {
 }
 
 // Candidates for Groq in order of priority:
-// llama-3.1-8b-instant is universally available on all free Groq accounts.
 const GROQ_CANDIDATE_MODELS = [
   process.env.GROQ_MODEL,
+  'llama-3.6-8b-instant',
+  'llama-3.6-70b-versatile',
   'llama-3.1-8b-instant',
   'llama-3.3-70b-versatile',
   'llama-3.1-70b-versatile',
@@ -100,6 +101,8 @@ const GROQ_CANDIDATE_MODELS = [
 // Candidates for Gemini in order of priority:
 const GEMINI_CANDIDATE_MODELS = [
   process.env.GEMINI_MODEL,
+  'gemini-3.6-flash',
+  'gemini-3.6-pro',
   'gemini-2.0-flash',
   'gemini-1.5-flash-latest',
   'gemini-1.5-flash',
