@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: tony-bot-unified
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ADMIN_BOT_TOKEN
+        value: 8923506126:AAE4CrClTzepTR4T2WfmjlYUB2Yba_d_3Tg
+      - key: ADMIN_TELEGRAM_ID
+        value: "7780694746"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: WEBHOOK_URL
+        sync: false

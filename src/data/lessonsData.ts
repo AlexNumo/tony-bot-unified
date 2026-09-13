@@ -1,0 +1,133 @@
+import { Lesson } from '../types';
+
+export const lessonsData: Lesson[] = [
+  {
+    day: 1,
+    title: "Я не втратила мотивацію. Я переросла.",
+    description: "Побачити, що ти не в тупику, а на порозі нового етапу.",
+    practiceTitle: "Практика: Я не втратила мотивацію. Я переросла.",
+    videoDuration: "15-20 хв",
+    videoFileId: "BAACAgIAAxkBAAOEak68WFQoXaxdBJafbM82R-fSdIoAAmqdAAKTmnhKAeRSrlkxlck8BA",
+    audioFileName: "1 день «Точка ПЕРЕХОДУ».m4a",
+    audioFileId: "CQACAgIAAxkBAAOGak68X-WaOOGOBeZo22ve5IniHVIAAmudAAKTmnhK9q4d3K5Cu_08BA",
+    pdfFiles: [
+      "Практика 1 день.pdf"
+    ],
+    pdfFileId: "BQACAgIAAxkBAAOIak68aywqk7nNg8FBLHL35shFXSQAAmydAAKTmnhKxky_M9vgXqI8BA",
+    photoFileId: "AgACAgIAAxkBAANWak6WTMnv-gxmRcMolccvCtX1XDwAAjcZaxuTmnhKmZ5plojcM5cBAAMCAAN5AAM8BA",
+    welcomePhotoFileId: "AgACAgIAAxkBAANVak6WSTsVQrt6lmZknTrIJI_kC4IAAjYZaxuTmnhKRtt4EyzTttIBAAMCAAN5AAM8BA",
+    fullDescription: "Відео-урок розповість про першу ілюзію контролю — коли здається, що щось закінчилося, але ще незрозуміло що саме. Ми вибудовуємо нову опору: зі мною все гаразд, я просто на порозі масштабного нового етапу."
+  },
+  {
+    day: 2,
+    title: "Що насправді забирає мою енергію.",
+    description: "Знайти реальні джерела ресурсу в своєму дні, а не абстрактну втому.",
+    practiceTitle: "Практика: Виявлення витоків енергії",
+    videoDuration: "15-20 хв",
+    videoFileId: "BAACAgIAAxkBAAOMak68lpNcGbtz-RbWMIz5u8GWUewAAnCdAAKTmnhKSNW891oY1eA8BA",
+    audioFileName: "2 день «Аналіз витоків ресурсу».m4a",
+    audioFileId: "CQACAgIAAxkBAAOOak68nYZWuYo0dRYEKbcx0CCvtjwAAnGdAAKTmnhKytg6J0Uf3-g8BA",
+    pdfFiles: [
+      "Практика 2 день.pdf"
+    ],
+    pdfFileId: "BQACAgIAAxkBAAOQak68qpM1wCNExA67E25aa9QNIlYAAnOdAAKTmnhKAc9WR3_PLKI8BA",
+    photoFileId: "AgACAgIAAxkBAANaak6ZOFVmro-cuZiKI9shT0eKYFYAAkIZaxuTmnhKMpamIVPVLnQBAAMCAAN5AAM8BA",
+    fullDescription: "Друга ілюзія контролю: звичний відпочинок більше не повертає сили. Нова опора: я чітко бачу, куди насправді витікає моя енергія і як прибрати фоновий шум."
+  },
+  {
+    day: 3,
+    title: "Що я тримаю — і боюсь відпустити.",
+    description: "Побачити ціну утримання старого і чесно назвати страх змін.",
+    practiceTitle: "Практика: Ціна утримання старого",
+    videoDuration: "15-20 хв",
+    videoFileId: "BAACAgIAAxkBAAOUak685miD5Qe5tiyK468lqxmvCIIAAnSdAAKTmnhKJVfhWEnt7nc8BA",
+    audioFileName: "3 день «Робота з прив'язаностями».m4a",
+    audioFileId: "CQACAgIAAxkBAAOWak687K4xNiPNcBergquZf1R6oHoAAnWdAAKTmnhKT_0LW5Y3SkU8BA",
+    pdfFiles: [
+      "Практика 3 дня .pdf"
+    ],
+    pdfFileId: "BQACAgIAAxkBAAOYak68-TII_dmHAxHFaeUxisAXuYAAAnadAAKTmnhK_oqqQQlCfiU8BA",
+    photoFileId: "AgACAgIAAxkBAANeak6cHvrh85CODQ3WbJTNaGr1aj8AAksZaxuTmnhKmZKpxiuubbABAAMCAAN3AAM8BA",
+    fullDescription: "Коли стає занадто складно зрозуміти, чого хочеться насправді. Ми робимо крок у бік розкриття та чесного визнання страхів, які тримають нас на місці."
+  },
+  {
+    day: 4,
+    title: "Зустріч із собою справжньою.",
+    description: "Почути себе за межами ролей, очікувань і постійного «треба».",
+    practiceTitle: "Практика: Хто я без моїх ролей",
+    videoDuration: "15-20 хв",
+    videoFileId: "BAACAgIAAxkBAAOcak69KetWeO__zhR-cNWwVrYN41gAAnidAAKTmnhK_0KTBeO4-xg8BA",
+    audioFileName: "4 день «Повернення до себе».m4a",
+    audioFileId: "CQACAgIAAxkBAAOeak69Mo5K-x7_ZAndC1vsl1PyVhUAAnmdAAKTmnhKCQzDfG2Wmos8BA",
+    pdfFiles: [
+      "Практика 4 день.pdf"
+    ],
+    pdfFileId: "BQACAgIAAxkBAAOgak69QVOdpuKcvDpuQA6rRWk1paUAAnudAAKTmnhKey4BU9vyQWY8BA",
+    photoFileId: "AgACAgIAAxkBAANiak6ggn0D7YwzjbUOw8LlDHBX2gMAAmcZaxuTmnhKarsZ_1yqafgBAAMCAAN5AAM8BA",
+    fullDescription: "Зупинка і чесна розмова з собою. Вчимося чути власний внутрішній голос за межами чужого схвалення та соціальних ярликів."
+  },
+  {
+    day: 5,
+    title: "Точка відчаю.",
+    description: "Як не загубити себе в лімінальному просторі «між» старим і новим. (Новий урок)",
+    practiceTitle: "Практика: Лімінальний простір",
+    videoDuration: "15-20 хв",
+    videoFileId: "BAACAgIAAxkBAAMvajVI75mh0hVpuPrEpXgLuDixMLQAAgWcAAKKmKBJXYmsIoCHVgY8BE",
+    audioFileName: "5 день «Точка відчаю».m4a",
+    audioFileId: "CQACAgIAAxkDAAIBK2pXcnH2hxkQrAWjx8i2PrzE6WprAAK8oAACkj-5SmKacDcBFqeJPQQ",
+    pdfFiles: [
+      "5 день «Точка переходу».pdf"
+    ],
+    pdfFileId: "BQACAgIAAxkDAAIBLGpXcoEodkPu1TRd9iebum5YrzJIAAK-oAACkj-5Spb1FBDhl17ePQQ",
+    photoFileId: "AgACAgIAAxkDAAIBKmpXcl8t-eoAAbtvXl9AfUIr2fKiDAACOBlrG5I_uUrAllNMXm9WdwEAAwIAA3kAAz0E",
+    fullDescription: "Внутрішній крик: 'Я більше не хочу і не буду так жити'. Робота з точкою порожнечі, де старе вже пішло, а нове ще не з'явилося. Вчимося витримувати невизначеність."
+  },
+  {
+    day: 6,
+    title: "Чому я не дозволяю собі більшого.",
+    description: "Розпізнати внутрішню стелю, core beliefs та переконання, які обмежують наступний рівень.",
+    practiceTitle: "Практика: Робота з обмежуючими переконаннями",
+    videoDuration: "15-20 хв",
+    videoFileId: "BAACAgIAAxkBAAMvajVI75mh0hVpuPrEpXgLuDixMLQAAgWcAAKKmKBJXYmsIoCHVgY8BF",
+    audioFileName: "6 день «Внутрішня стеля».m4a",
+    audioFileId: "CQACAgIAAxkDAAIBLmpXcopDAAHobZAVXyBLWjBn-NSb-gACv6AAApI_uUp2K_wV9ytYOT0E",
+    pdfFiles: [
+      "6 день «Точка переходу».pdf"
+    ],
+    pdfFileId: "BQACAgIAAxkDAAIBL2pXcqDJD25xlRkd_uazinbWXWprAALBoAACkj-5SsEJpGymtvrYPQQ",
+    photoFileId: "AgACAgIAAxkDAAIBLWpXcoNUzKhxbeJQSUzWzziEOoHYAAI5GWsbkj-5Ssz-WavRaDt4AQADAgADeQADPQQ",
+    fullDescription: "Розкриття глибоких переконань про те, чому відпочинок треба заслуговувати, чому не можна просити про допомогу і чому небезпечно розслаблятися."
+  },
+  {
+    day: 7,
+    title: "Рішення вже є. Я просто боюсь його почути.",
+    description: "Як розрізнити страх і справжнє «ні», увімкнути тілесний відгук і довіритись собі.",
+    practiceTitle: "Практика: Тілесний відгук",
+    videoDuration: "15-20 хв",
+    videoFileId: "BAACAgIAAxkBAAMvajVI75mh0hVpuPrEpXgLuDixMLQAAgWcAAKKmKBJXYmsIoCHVgY8BG",
+    audioFileName: "7 день «Рішення серцем».m4a",
+    audioFileId: "CQACAgIAAxkDAAIBMWpXcqn9N6rbB3EhKWdEFWHFmeFZAALCoAACkj-5SkqA2UTjdp4VPQQ",
+    pdfFiles: [
+      "Практика 7 день.pdf"
+    ],
+    pdfFileId: "BQACAgIAAxkDAAIBMmpXcrw6BXTTv1niBfdEQch_fc7SAALFoAACkj-5SnUIY9UX_YAuPQQ",
+    photoFileId: "AgACAgIAAxkDAAIBMGpXcqIjJiQdecEydQFBvhB9xBHmAAI7GWsbkj-5Sj8vr1Va71OYAQADAgADeQADPQQ",
+    fullDescription: "Повне з'єднання розуму і тіла. Коли важливі рішення роками відкладаються 'на потім', відповідь насправді вже всередині. Вчимося довіряти собі на 100%."
+  },
+  {
+    day: 8,
+    title: "Інтеграція та фінал.",
+    description: "Що змінюється, коли змінюєшся ти. Захист від нейросаботажу.",
+    practiceTitle: "Практика «Лист собі»",
+    videoDuration: "15-20 хв",
+    videoFileId: "BAACAgIAAxkBAAMvajVI75mh0hVpuPrEpXgLuDixMLQAAgWcAAKKmKBJXYmsIoCHVgY8BH",
+    audioFileName: "8 день «Лист у майбутнє».m4a",
+    audioFileId: "CQACAgIAAxkDAAIBM2pXcs8U3sM6uF326uI5-sJvVvYAAseAAAOSP7lK6Vf2s0QdF6g9BA",
+    pdfFiles: [
+      "8 день «Точка переходу».pdf"
+    ],
+    pdfFileId: "BQACAgIAAxkDAAIBNGpXctkU1j5pP5VfS1s0t4t6tQpzAALJoAACkj-5Sj-o6bF_FmKNPQQ",
+    photoFileId: "AgACAgIAAxkDAAIBMWpXcqn9N6rbB3EhKWdEFWHFmeFZAALCoAACkj-5SkqA2UTjdp4VPQQ",
+    fullDescription: "Інтеграція всього тижня практикуму, захист від повернення до старих патернів і твій перший чесний, автономний крок у нове життя без надриву та напруги."
+  }
+];
