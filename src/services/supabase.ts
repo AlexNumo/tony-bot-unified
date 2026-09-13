@@ -2,7 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { User, Lead, TestResult, Package } from '../types';
+import { User, Lead, TestResult, Package, SchedulerConfig } from '../types';
 
 dotenv.config();
 
@@ -608,4 +608,46 @@ export async function getAllPackages(): Promise<Package[]> {
       available_places: 2
     }
   ];
+}
+
+export async function cleanupOldMessages(daysOld = 7): Promise<void> {
+  const thresholdDate = new Date();
+  thresholdDate.setDate(thresholdDate.getDate() - daysOld);
+  const thresholdIso = thresholdDate.toISOString();
+  if (supabase) {
+    try {
+      const { error, count } = await supabase.from('messages').delete({ count: 'exact' }).lt('created_at', thresholdIso).neq('user_id', 'SYSTEM_CONFIG');
+      if (error) console.error('Supabase cleanup error:', error);
+      else console.log('Cleaned up old messages from Supabase.');
+    } catch (err) {
+      console.error('Supabase cleanup error:', err);
+    }
+  }
+}
+
+export async function getSupabaseConfig(): Promise<SchedulerConfig | null> {
+  if (!supabase) return null;
+  try {
+    const { data } = await supabase.from('messages').select('text').eq('user_id', 'SYSTEM_CONFIG').eq('direction', 'system').order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (data && data.text) return JSON.parse(data.text);
+  } catch (err) {}
+  return null;
+}
+
+export async function setSupabaseConfig(config: SchedulerConfig): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from('messages').insert({ user_id: 'SYSTEM_CONFIG', direction: 'system', text: JSON.stringify(config), created_at: new Date().toISOString() });
+  } catch (err) {}
+}
+
+export async function hasUserReceivedLessonToday(userId: number | string): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const { data } = await supabase.from('course_progress_logs').select('id').eq('user_id', String(userId)).eq('status', 'sent').gte('created_at', todayStr + 'T00:00:00Z');
+    return data && data.length > 0;
+  } catch (err) {
+    return false;
+  }
 }

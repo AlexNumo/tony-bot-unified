@@ -19,10 +19,11 @@ import {
   getUserMessages, 
   logUserAction, 
   logCourseProgress, 
-  checkSupabaseConnection 
+  checkSupabaseConnection,
+  setSupabaseConfig 
 } from './src/services/supabase';
 import { sendPurchaseMaterialsToUser } from './src/bot/materials';
-import { runNewsletterBroadcast, startBackgroundScheduler } from './src/services/scheduler';
+import { runNewsletterBroadcast, startBackgroundScheduler, getSchedulerConfig } from './src/services/scheduler';
 import { sendAdminBotNotification } from './src/services/adminNotifier';
 import { lessonsData } from './src/data/lessonsData';
 
@@ -113,6 +114,21 @@ app.put('/api/users/:id/status', async (req: Request, res: Response) => {
   }
 
   res.json({ success });
+});
+
+app.post('/api/users/:id/send-lesson', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { dayNum } = req.body;
+  try {
+    const result = await runNewsletterBroadcast(bot, { 
+      trigger: 'manual', 
+      targetUserId: id, 
+      dayNum: Number(dayNum) 
+    });
+    res.json({ success: true, result });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.put('/api/users/:id/current-day', async (req: Request, res: Response) => {
@@ -208,18 +224,13 @@ app.put('/api/lessons', (req: Request, res: Response) => {
 });
 
 // Broadcast
-app.get('/api/broadcast/config', (_req: Request, res: Response) => {
-  const config = readDataFile('scheduler_config.json', {
-    broadcastHour: 9,
-    broadcastMinute: 0,
-    targetAudience: 'paid',
-    lastBroadcastDate: ''
-  });
-  res.json({ success: true, data: config });
+app.get('/api/broadcast/config', async (_req: Request, res: Response) => {
+  const config = await getSchedulerConfig();
+  res.json(config);
 });
 
-app.post('/api/broadcast/config', (req: Request, res: Response) => {
-  writeDataFile('scheduler_config.json', req.body);
+app.post('/api/broadcast/config', async (req: Request, res: Response) => {
+  await setSupabaseConfig(req.body);
   res.json({ success: true });
 });
 

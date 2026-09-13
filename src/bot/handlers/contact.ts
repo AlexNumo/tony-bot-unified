@@ -2,6 +2,7 @@ import { Context } from 'grammy';
 import { updateUserPhone, checkAndLinkGuestPayment, saveMessage } from '../../services/supabase';
 import { sendPurchaseMaterialsToUser } from '../materials';
 import { sendDayMaterial } from './day';
+import { logCourseProgress, updateUserDay } from '../../services/supabase';
 
 export async function handleContactMessage(ctx: Context): Promise<void> {
   const contact = ctx.message?.contact;

@@ -3,6 +3,8 @@ import { addUser, getUserData, updateUserStatus, saveMessage } from '../../servi
 import { getMainMenuKeyboard, getContactKeyboard } from '../keyboards';
 import { sendPurchaseMaterialsToUser } from '../materials';
 import { sendDayMaterial } from './day';
+import { logCourseProgress, updateUserDay } from '../../services/supabase';
+import { sendDayMaterial } from './day';
 
 export async function handleStartCommand(ctx: Context): Promise<void> {
   if (!ctx.from) return;

@@ -1,13 +1,16 @@
 import { Bot } from 'grammy';
 import fs from 'fs';
 import path from 'path';
-import { getUsersByStatus, updateUserDay, logCourseProgress } from './supabase';
+import { getUsersByStatus, updateUserDay, logCourseProgress, cleanupOldMessages, getSupabaseConfig, setSupabaseConfig, hasUserReceivedLessonToday } from './supabase';
 import { sendDayMaterial } from '../bot/handlers/day';
 import { BroadcastLog, SchedulerConfig } from '../types';
 
 const DATA_DIR = path.resolve(process.cwd(), 'src/data');
 
-function getSchedulerConfig(): SchedulerConfig {
+export async function getSchedulerConfig(): Promise<SchedulerConfig> {
+  const dbConfig = await getSupabaseConfig();
+  if(dbConfig) return dbConfig;
+
   try {
     const filePath = path.join(DATA_DIR, 'scheduler_config.json');
     if (fs.existsSync(filePath)) {
@@ -110,7 +113,7 @@ export function startBackgroundScheduler(bot: Bot<any>): void {
 
   setInterval(async () => {
     try {
-      const config = getSchedulerConfig();
+      const config = await getSchedulerConfig();
       const now = new Date();
       // Kyiv timezone: UTC+2 or UTC+3 depending on DST
       const kyivDate = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Kyiv' }));

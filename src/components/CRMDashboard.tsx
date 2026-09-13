@@ -295,6 +295,34 @@ export default function CRMDashboard({
     }
   };
 
+  const handleManualSend = async (u: User) => {
+    const dayStr = window.prompt("Який день відправити користувачу " + u.username + "? (Введіть число від 1 до 8)");
+    if (!dayStr) return;
+    const dayNum = parseInt(dayStr);
+    if (isNaN(dayNum) || dayNum < 1 || dayNum > 8) {
+      alert("Будь ласка, введіть коректне число від 1 до 8.");
+      return;
+    }
+    
+    if (window.confirm("Дійсно відправити матеріали Дня " + dayNum + " користувачу " + u.username + "?")) {
+      try {
+        const res = await fetch("/api/users/" + u.telegramId + "/send-lesson", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dayNum })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert("Заняття успішно відправлено!");
+        } else {
+          alert("Помилка: " + data.error);
+        }
+      } catch (e: any) {
+        alert("Помилка: " + e.message);
+      }
+    }
+  };
+
   const handleDeleteRequest = (u: User) => {
     setConfirmModal({
       isOpen: true,
@@ -633,6 +661,13 @@ export default function CRMDashboard({
                             >
                               <MessageSquare className="w-3 h-3" />
                               Діалог
+                            </button>
+                            <button 
+                              onClick={() => handleManualSend(u)}
+                              className="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 text-[10px] font-semibold px-2 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                            >
+                              <Send className="w-3 h-3" />
+                              Відправити
                             </button>
                             <button 
                               onClick={() => handleDeleteRequest(u)}
