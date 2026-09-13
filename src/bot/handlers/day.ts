@@ -36,11 +36,12 @@ export async function handleDayCommand(ctx: Context): Promise<void> {
     return;
   }
 
-  await sendDayMaterial(ctx.api as any, userId, dayNum);
+  await sendDayMaterial(ctx.api, userId, dayNum);
 }
 
-export async function sendDayMaterial(bot: Bot<any>, userId: number | string, dayNum: number): Promise<void> {
+export async function sendDayMaterial(botOrApi: any, userId: number | string, dayNum: number): Promise<void> {
   const uId = Number(userId);
+  const api = botOrApi?.api || botOrApi;
   const lesson = lessonsData.find(l => l.day === dayNum);
   if (!lesson) return;
 
@@ -65,13 +66,13 @@ export async function sendDayMaterial(bot: Bot<any>, userId: number | string, da
     `Наступний урок буде надіслано автоматично.`;
 
   // 1. Send Text
-  await bot.api.sendMessage(uId, formattedText, { parse_mode: 'HTML', protect_content: true });
+  await api.sendMessage(uId, formattedText, { parse_mode: 'HTML', protect_content: true });
   await saveMessage(uId, 'bot', formattedText);
 
   // 2. Send Video (by file_id)
   if (lesson.videoFileId) {
     try {
-      await bot.api.sendVideo(uId, lesson.videoFileId, {
+      await api.sendVideo(uId, lesson.videoFileId, {
         caption: `🎬 Відео-урок День ${dayNum}: ${lesson.title}`,
         protect_content: true
       });
@@ -84,7 +85,7 @@ export async function sendDayMaterial(bot: Bot<any>, userId: number | string, da
   // 3. Send Audio (by file_id or local file)
   if (lesson.audioFileId) {
     try {
-      await bot.api.sendAudio(uId, lesson.audioFileId, {
+      await api.sendAudio(uId, lesson.audioFileId, {
         caption: `🎵 День ${dayNum}. Аудіо-практика: ${lesson.practiceTitle}`,
         protect_content: true
       });
@@ -96,7 +97,7 @@ export async function sendDayMaterial(bot: Bot<any>, userId: number | string, da
     const audioPath = path.resolve(process.cwd(), `Material/Day_${dayNum}/${lesson.audioFileName}`);
     if (fs.existsSync(audioPath)) {
       try {
-        await bot.api.sendAudio(uId, new InputFile(audioPath), {
+        await api.sendAudio(uId, new InputFile(audioPath), {
           caption: `🎵 День ${dayNum}. Аудіо-практика: ${lesson.practiceTitle}`,
           protect_content: true
         });
@@ -109,7 +110,7 @@ export async function sendDayMaterial(bot: Bot<any>, userId: number | string, da
   // 4. Send PDF Workbook (by file_id or local file)
   if (lesson.pdfFileId) {
     try {
-      await bot.api.sendDocument(uId, lesson.pdfFileId, {
+      await api.sendDocument(uId, lesson.pdfFileId, {
         caption: `📄 Робочий зошит до Дня ${dayNum}`,
         protect_content: true
       });

@@ -9,15 +9,17 @@ export const ADMIN_BOT_TOKEN = process.env.ADMIN_BOT_TOKEN || '8923506126:AAE4Cr
 
 /**
  * Sends a notification directly via the main bot to the primary admin.
+ * Supports passing Bot, Api, or Context.
  */
 export async function notifyAdminAboutMessage(
-  mainBot: Bot<any>,
+  mainBotOrApi: any,
   userId: number | string,
   username: string | undefined,
   text: string,
   reason = 'new_message'
 ): Promise<void> {
   try {
+    const api = mainBotOrApi?.api || mainBotOrApi;
     const userDisplay = username ? `@${username} (${userId})` : `ID: ${userId}`;
     let title = '💬 Нове повідомлення від користувача';
     if (reason === 'human_request') {
@@ -32,7 +34,7 @@ export async function notifyAdminAboutMessage(
       `📝 <b>Текст:</b>\n<i>${text}</i>\n\n` +
       `🔗 <a href="tg://user?id=${userId}">Відкрити профіль користувача</a>`;
 
-    await mainBot.api.sendMessage(ADMIN_TELEGRAM_ID, adminMsg, { parse_mode: 'HTML' });
+    await api.sendMessage(ADMIN_TELEGRAM_ID, adminMsg, { parse_mode: 'HTML' });
   } catch (err) {
     console.error('Failed to notify primary admin via main bot:', err);
   }

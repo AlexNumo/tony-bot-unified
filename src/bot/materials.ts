@@ -7,10 +7,11 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  * Sends both Workbooks (PDFs) and 3 gifts with 15-second delays between files.
- * Matches Python handlers.py send_purchase_materials_to_user verbatim.
+ * Supports passing Bot, Api, or Context.
  */
-export async function sendPurchaseMaterialsToUser(bot: Bot<any>, userId: number | string): Promise<void> {
+export async function sendPurchaseMaterialsToUser(botOrApi: any, userId: number | string): Promise<void> {
   const uId = Number(userId);
+  const api = botOrApi?.api || botOrApi;
 
   const congratsText = 
     `<b>🎉 Вітаємо у практикумі «Точка переходу»!</b>\n\n` +
@@ -21,7 +22,7 @@ export async function sendPurchaseMaterialsToUser(bot: Bot<any>, userId: number 
     `<i>⏳ Для вашої зручності файли надходитимуть послідовно з інтервалом у 15 секунд.</i>`;
 
   try {
-    await bot.api.sendMessage(uId, congratsText, { parse_mode: 'HTML' });
+    await api.sendMessage(uId, congratsText, { parse_mode: 'HTML' });
     await saveMessage(uId, 'bot', congratsText);
   } catch (err) {
     console.error(`Error sending congrats to ${uId}:`, err);
@@ -36,9 +37,9 @@ export async function sendPurchaseMaterialsToUser(bot: Bot<any>, userId: number 
       try {
         const file = new InputFile(resolvedPath);
         if (type === 'document') {
-          await bot.api.sendDocument(uId, file, { caption, protect_content: true });
+          await api.sendDocument(uId, file, { caption, protect_content: true });
         } else if (type === 'audio') {
-          await bot.api.sendAudio(uId, file, { caption, protect_content: true });
+          await api.sendAudio(uId, file, { caption, protect_content: true });
         }
         await saveMessage(uId, 'bot', logLabel);
       } catch (err) {
