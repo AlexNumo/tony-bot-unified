@@ -1,13 +1,21 @@
-import { Bot, InputFile } from 'grammy';
-import fs from 'fs';
-import path from 'path';
 import { saveMessage } from '../services/supabase';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Persistent Telegram file_ids for Workbooks and Bonus Gifts
+// Content protection is intentionally NOT enabled for workbooks/gifts so users can download and print them.
+export const BONUS_MATERIALS_FILE_IDS = {
+  WORKBOOK_1: 'BQACAgIAAxkDAAIB6mqnAcL5jxEwi5v3aU-Mwztb_6gmAALpqAACXlU5Sb2hZKv6HhZyPQQ',
+  WORKBOOK_2: 'BQACAgIAAxkDAAIB62qnAdQeIkPUR51U66o_x7teevS5AALqqAACXlU5SW8gSUk-AAE0QD0E',
+  GIFT_1: 'BQACAgIAAxkDAAIB7GqnAd2Wqf_qb8LvF53CVKi3xtsLAALtqAACXlU5SbhHFPTBcQWIPQQ',
+  GIFT_2: 'BQACAgIAAxkDAAIB7WqnAel6ac8mN949dDLJvYKv1o-0AALvqAACXlU5SV7idxMq0MM1PQQ',
+  GIFT_3: 'CQACAgIAAxkDAAIB7mqnAfDmh8Tvo6w1ynIpT8o7p8DdAALwqAACXlU5Sd5hj_g7zRcPPQQ'
+};
+
 /**
  * Sends both Workbooks (PDFs) and 3 gifts with 15-second delays between files.
  * Supports passing Bot, Api, or Context.
+ * Note: Sent without protect_content so users can save, open in apps, and print.
  */
 export async function sendPurchaseMaterialsToUser(botOrApi: any, userId: number | string): Promise<void> {
   const uId = Number(userId);
@@ -30,68 +38,67 @@ export async function sendPurchaseMaterialsToUser(botOrApi: any, userId: number 
 
   await sleep(3000);
 
-  // Helper to send a local file or log if absent
-  async function sendFileSafe(filePath: string, type: 'document' | 'audio', caption: string, logLabel: string) {
-    const resolvedPath = path.resolve(process.cwd(), filePath);
-    if (fs.existsSync(resolvedPath)) {
-      try {
-        const file = new InputFile(resolvedPath);
-        if (type === 'document') {
-          await api.sendDocument(uId, file, { caption, protect_content: true });
-        } else if (type === 'audio') {
-          await api.sendAudio(uId, file, { caption, protect_content: true });
-        }
-        await saveMessage(uId, 'bot', logLabel);
-      } catch (err) {
-        console.error(`Failed to send file ${filePath}:`, err);
-      }
-    } else {
-      console.log(`ℹ️ File ${filePath} not found locally, simulating message log: ${logLabel}`);
-      await saveMessage(uId, 'bot', logLabel);
-    }
+  // 1. Workbook 1
+  try {
+    await api.sendDocument(uId, BONUS_MATERIALS_FILE_IDS.WORKBOOK_1, {
+      caption: '📚 Робочий зошит «Точка переходу» (Варіант 1)\n\nТвій особистий простір для роздумів, відкриттів та чесної розмови із собою.'
+    });
+    await saveMessage(uId, 'bot', '[Надіслано Робочий зошит PDF (Варіант 1)]');
+  } catch (err) {
+    console.error(`Failed to send Workbook 1 to ${uId}:`, err);
   }
 
-  // 1. Workbook 1
-  await sendFileSafe(
-    'Material/Робочий_зошит_Точка_переходу.pdf',
-    'document',
-    '📚 Робочий зошит «Точка переходу» (Варіант 1)\n\nТвій особистий простір для роздумів, відкриттів та чесної розмови із собою.',
-    '[Надіслано Робочий зошит PDF (Варіант 1)]'
-  );
   await sleep(15000);
 
   // 2. Workbook 2
-  await sendFileSafe(
-    'Material/Робочий_зошит_Точка_переходу_2.pdf',
-    'document',
-    '📚 Робочий зошит «Точка переходу» (Варіант 2)\n\nАльтернативний формат зошиту для зручного використання.',
-    '[Надіслано Робочий зошит PDF (Варіант 2)]'
-  );
+  try {
+    await api.sendDocument(uId, BONUS_MATERIALS_FILE_IDS.WORKBOOK_2, {
+      caption: '📚 Робочий зошит «Точка переходу» (Варіант 2)\n\nАльтернативний формат зошиту для зручного використання.'
+    });
+    await saveMessage(uId, 'bot', '[Надіслано Робочий зошит PDF (Варіант 2)]');
+  } catch (err) {
+    console.error(`Failed to send Workbook 2 to ${uId}:`, err);
+  }
+
   await sleep(15000);
 
-  // 3. Bonus 1
-  await sendFileSafe(
-    'Material/Gift/7_ОЗНАК_ЩО_ЗАСЛУГОВУЄШ_СВОЮ_ЦІННІСТЬ.pptx',
-    'document',
-    "🎁 Бонус 1: Презентація '7 ознак, що заслуговуєш свою цінність'",
-    '[Надіслано бонус: 7_ОЗНАК_ЩО_ЗАСЛУГОВУЄШ_СВОЮ_ЦІННІСТЬ.pptx]'
-  );
-  await sleep(15000);
+  // 3. Gifts
+  const gifts = [
+    {
+      fileId: BONUS_MATERIALS_FILE_IDS.GIFT_1,
+      type: 'document' as const,
+      caption: "🎁 Бонус 1: Презентація '7 ознак, що заслуговуєш свою цінність'",
+      log: '[Надіслано бонус: 7_ОЗНАК_ЩО_ЗАСЛУГОВУЄШ_СВОЮ_ЦІННІСТЬ.pptx]'
+    },
+    {
+      fileId: BONUS_MATERIALS_FILE_IDS.GIFT_2,
+      type: 'document' as const,
+      caption: "🎁 Бонус 2: Презентація 'Сила без напруги'",
+      log: '[Надіслано бонус: СИЛА без НАПРУГИ.pptx]'
+    },
+    {
+      fileId: BONUS_MATERIALS_FILE_IDS.GIFT_3,
+      type: 'audio' as const,
+      caption: "🎁 Бонус 3: Аудіопрактика-медитація 'Повернення до себе'",
+      log: '[Надіслано бонус: ПРАКТИКА - Медитація подарунок.m4a]'
+    }
+  ];
 
-  // 4. Bonus 2
-  await sendFileSafe(
-    'Material/Gift/СИЛА без НАПРУГИ.pptx',
-    'document',
-    "🎁 Бонус 2: Презентація 'Сила без напруги'",
-    '[Надіслано бонус: СИЛА без НАПРУГИ.pptx]'
-  );
-  await sleep(15000);
+  for (let idx = 0; idx < gifts.length; idx++) {
+    const gift = gifts[idx];
+    try {
+      if (gift.type === 'document') {
+        await api.sendDocument(uId, gift.fileId, { caption: gift.caption });
+      } else if (gift.type === 'audio') {
+        await api.sendAudio(uId, gift.fileId, { caption: gift.caption });
+      }
+      await saveMessage(uId, 'bot', gift.log);
+    } catch (err) {
+      console.error(`Failed to send gift ${idx + 1} to ${uId}:`, err);
+    }
 
-  // 5. Bonus 3
-  await sendFileSafe(
-    'Material/Gift/ПРАКТИКА - Медитація подарунок.m4a',
-    'audio',
-    "🎁 Бонус 3: Аудіопрактика-медитація 'Повернення до себе'",
-    '[Надіслано бонус: ПРАКТИКА - Медитація подарунок.m4a]'
-  );
+    if (idx < gifts.length - 1) {
+      await sleep(15000);
+    }
+  }
 }
