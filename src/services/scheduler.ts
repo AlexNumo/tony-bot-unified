@@ -9,19 +9,26 @@ const DATA_DIR = path.resolve(process.cwd(), 'src/data');
 
 export async function getSchedulerConfig(): Promise<SchedulerConfig> {
   const dbConfig = await getSupabaseConfig();
-  if(dbConfig) return dbConfig;
+  if (dbConfig) return dbConfig;
+
+  const envHour = process.env.BROADCAST_HOUR !== undefined ? parseInt(process.env.BROADCAST_HOUR, 10) : undefined;
+  const envMinute = process.env.BROADCAST_MINUTE !== undefined ? parseInt(process.env.BROADCAST_MINUTE, 10) : undefined;
 
   try {
     const filePath = path.join(DATA_DIR, 'scheduler_config.json');
     if (fs.existsSync(filePath)) {
-      return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      const fileConfig: SchedulerConfig = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      if (envHour !== undefined && !isNaN(envHour)) fileConfig.broadcastHour = envHour;
+      if (envMinute !== undefined && !isNaN(envMinute)) fileConfig.broadcastMinute = envMinute;
+      return fileConfig;
     }
   } catch (err) {
     console.error('Error reading scheduler config:', err);
   }
+
   return {
-    broadcastHour: 9,
-    broadcastMinute: 0,
+    broadcastHour: envHour !== undefined && !isNaN(envHour) ? envHour : 17,
+    broadcastMinute: envMinute !== undefined && !isNaN(envMinute) ? envMinute : 0,
     targetAudience: 'paid',
     lastBroadcastDate: ''
   };
@@ -128,9 +135,11 @@ export function startBackgroundScheduler(bot: Bot<any>): void {
       if (hour === config.broadcastHour && minute === config.broadcastMinute) {
         console.log(`⏰ Scheduled broadcast time reached (${hour}:${minute} Kyiv). Triggering daily broadcast...`);
         config.lastBroadcastDate = todayStr;
+        await setSupabaseConfig(config);
         fs.writeFileSync(path.join(DATA_DIR, 'scheduler_config.json'), JSON.stringify(config, null, 2), 'utf-8');
 
         await runNewsletterBroadcast(bot, { trigger: 'auto' });
+        await cleanupOldMessages(7);
       }
     } catch (err) {
       console.error('Error in scheduler interval:', err);

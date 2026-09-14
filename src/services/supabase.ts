@@ -628,20 +628,86 @@ export async function cleanupOldMessages(daysOld = 7): Promise<void> {
 export async function getSupabaseConfig(): Promise<SchedulerConfig | null> {
   if (!supabase) return null;
   try {
-    const { data } = await supabase.from('messages').select('text').eq('user_id', 0).eq('direction', 'system').order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (data && data.text) return JSON.parse(data.text);
-  } catch (err) {}
+    // 1. Try dedicated bot_settings table
+    const { data: settingData, error: settingError } = await supabase
+      .from('bot_settings')
+      .select('value')
+      .eq('key', 'scheduler_config')
+      .maybeSingle();
+
+    if (!settingError && settingData?.value) {
+      const val = typeof settingData.value === 'string' ? JSON.parse(settingData.value) : settingData.value;
+      if (val && val.broadcastHour !== undefined) return val;
+    }
+
+    // 2. Fallback to messages table (system message)
+    const { data: msgData, error: msgError } = await supabase
+      .from('messages')
+      .select('text')
+      .eq('direction', 'system')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!msgError && msgData?.text) {
+      try {
+        const parsed = JSON.parse(msgData.text);
+        if (parsed && parsed.broadcastHour !== undefined) return parsed;
+      } catch {}
+    }
+  } catch (err) {
+    console.error('getSupabaseConfig error:', err);
+  }
   return null;
 }
 
 export async function setSupabaseConfig(config: SchedulerConfig): Promise<void> {
-  if (!supabase) return;
+  // Always update local file first
   try {
-    // Ensure dummy user exists to satisfy foreign key
-    await supabase.from('users').upsert({ user_id: 0, username: 'SYSTEM_CONFIG', status: 'admin', current_day: 1 });
-    await supabase.from('messages').insert({ user_id: 0, direction: 'system', text: JSON.stringify(config), created_at: new Date().toISOString() });
+    const filePath = path.join(DATA_DIR, 'scheduler_config.json');
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify(config, null, 2), 'utf-8');
+  } catch (e) {}
+
+  if (!supabase) return;
+
+  try {
+    // 1. Try saving to bot_settings table
+    const { error: settingError } = await supabase
+      .from('bot_settings')
+      .upsert({
+        key: 'scheduler_config',
+        value: config,
+        updated_at: new Date().toISOString()
+      });
+
+    if (!settingError) {
+      console.log('✅ Scheduler config successfully saved to Supabase bot_settings');
+      return;
+    }
+
+    // 2. If bot_settings table does not exist, fallback to messages with an existing user
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('user_id')
+      .order('user_id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingUser?.user_id) {
+      const { error: msgError } = await supabase.from('messages').insert({
+        user_id: existingUser.user_id,
+        direction: 'system',
+        text: JSON.stringify(config),
+        created_at: new Date().toISOString()
+      });
+      if (!msgError) {
+        console.log('✅ Scheduler config saved to Supabase messages');
+        return;
+      }
+    }
   } catch (err) {
-    console.error('Failed to save config:', err);
+    console.error('Failed to save config to Supabase:', err);
   }
 }
 

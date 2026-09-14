@@ -83,3 +83,16 @@ VALUES
   ('support', 'Зі спікером', 'Супровід', '125€', '200€', 'Живий контакт і підтримка від Антоніни', '["Все з базового", "Telegram-група з учасницями", "Голосові відповіді від Антоніни", "1 Zoom-сесія", "3 бонуси"]', 5),
   ('vip', 'Індивідуально', 'VIP Супровід', '400€', '600€', 'Максимальна трансформація тет-а-тет', '["Все з Супроводу", "4 особисті сесії Zoom", "Чат 24/7 зі спікером", "Індивідуальна карта практик", "3 бонуси"]', 2)
 ON CONFLICT (id) DO NOTHING;
+
+
+-- 8. Системні налаштування (розклад розсилок тощо)
+CREATE TABLE IF NOT EXISTS bot_settings (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Початкові налаштування розкладу (за замовчуванням 17:00 Київ)
+INSERT INTO bot_settings (key, value)
+VALUES ('scheduler_config', '{"broadcastHour": 17, "broadcastMinute": 0, "targetAudience": "paid", "lastBroadcastDate": ""}'::jsonb)
+ON CONFLICT (key) DO NOTHING;

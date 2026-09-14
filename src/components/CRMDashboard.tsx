@@ -117,7 +117,7 @@ export default function CRMDashboard({
   });
 
   // Real broadcast logs and scheduler configuration
-  const [broadcastHour, setBroadcastHour] = useState<number>(11);
+  const [broadcastHour, setBroadcastHour] = useState<number>(17);
   const [broadcastMinute, setBroadcastMinute] = useState<number>(0);
   const [targetAudience, setTargetAudience] = useState<string>('paid');
   const [configSaving, setConfigSaving] = useState<boolean>(false);
@@ -140,10 +140,11 @@ export default function CRMDashboard({
     try {
       const res = await fetch('/api/broadcast/config');
       const data = await res.json();
-      if (data.success && data.data) {
-        setBroadcastHour(data.data.broadcastHour ?? 11);
-        setBroadcastMinute(data.data.broadcastMinute ?? 0);
-        setTargetAudience(data.data.targetAudience ?? 'paid');
+      const cfg = data.data || (data.broadcastHour !== undefined ? data : null);
+      if (cfg) {
+        setBroadcastHour(cfg.broadcastHour ?? 17);
+        setBroadcastMinute(cfg.broadcastMinute ?? 0);
+        setTargetAudience(cfg.targetAudience ?? 'paid');
       }
     } catch (err) {
       console.error('Помилка завантаження конфігурації планувальника:', err);

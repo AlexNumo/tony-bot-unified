@@ -226,7 +226,7 @@ app.put('/api/lessons', (req: Request, res: Response) => {
 // Broadcast
 app.get('/api/broadcast/config', async (_req: Request, res: Response) => {
   const config = await getSchedulerConfig();
-  res.json(config);
+  res.json({ success: true, data: config });
 });
 
 app.post('/api/broadcast/config', async (req: Request, res: Response) => {
