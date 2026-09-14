@@ -616,7 +616,7 @@ export async function cleanupOldMessages(daysOld = 7): Promise<void> {
   const thresholdIso = thresholdDate.toISOString();
   if (supabase) {
     try {
-      const { error, count } = await supabase.from('messages').delete({ count: 'exact' }).lt('created_at', thresholdIso).neq('user_id', 'SYSTEM_CONFIG');
+      const { error, count } = await supabase.from('messages').delete({ count: 'exact' }).lt('created_at', thresholdIso).neq('user_id', 0);
       if (error) console.error('Supabase cleanup error:', error);
       else console.log('Cleaned up old messages from Supabase.');
     } catch (err) {
@@ -628,7 +628,7 @@ export async function cleanupOldMessages(daysOld = 7): Promise<void> {
 export async function getSupabaseConfig(): Promise<SchedulerConfig | null> {
   if (!supabase) return null;
   try {
-    const { data } = await supabase.from('messages').select('text').eq('user_id', 'SYSTEM_CONFIG').eq('direction', 'system').order('created_at', { ascending: false }).limit(1).maybeSingle();
+    const { data } = await supabase.from('messages').select('text').eq('user_id', 0).eq('direction', 'system').order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (data && data.text) return JSON.parse(data.text);
   } catch (err) {}
   return null;
@@ -637,8 +637,12 @@ export async function getSupabaseConfig(): Promise<SchedulerConfig | null> {
 export async function setSupabaseConfig(config: SchedulerConfig): Promise<void> {
   if (!supabase) return;
   try {
-    await supabase.from('messages').insert({ user_id: 'SYSTEM_CONFIG', direction: 'system', text: JSON.stringify(config), created_at: new Date().toISOString() });
-  } catch (err) {}
+    // Ensure dummy user exists to satisfy foreign key
+    await supabase.from('users').upsert({ user_id: 0, username: 'SYSTEM_CONFIG', status: 'admin', current_day: 1 });
+    await supabase.from('messages').insert({ user_id: 0, direction: 'system', text: JSON.stringify(config), created_at: new Date().toISOString() });
+  } catch (err) {
+    console.error('Failed to save config:', err);
+  }
 }
 
 export async function hasUserReceivedLessonToday(userId: number | string): Promise<boolean> {

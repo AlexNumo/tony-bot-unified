@@ -82,6 +82,19 @@ export async function sendDayMaterial(botOrApi: any, userId: number | string, da
     }
   }
 
+  // 2.5 Send Photo if available
+  if (lesson.photoFileId) {
+    try {
+      await api.sendPhoto(uId, lesson.photoFileId, {
+        caption: "??? �������� ��������: ���� " + dayNum,
+        protect_content: true
+      });
+      await saveMessage(uId, "bot", "[³��������� ���� ��� ��� " + dayNum + "]");
+    } catch (err) {
+      console.error("Failed to send photo for day " + dayNum + ":", err);
+    }
+  }
+
   // 3. Send Audio (by file_id or local file)
   if (lesson.audioFileId) {
     try {
