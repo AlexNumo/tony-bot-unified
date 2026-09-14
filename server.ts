@@ -83,6 +83,58 @@ function writeDataFile<T>(filename: string, data: T): void {
   }
 }
 
+
+// --- AUTHENTICATION CONFIGURATION & UTILITIES ---
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@tonypashko.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'tony2026';
+const AUTH_SECRET = process.env.AUTH_SECRET || process.env.ADMIN_PASSWORD || 'tony-auth-secret-key-2026';
+
+function generateAuthToken(email: string): string {
+  const timestamp = Date.now();
+  const signature = crypto.createHmac('sha256', AUTH_SECRET).update(`${email}:${timestamp}`).digest('hex');
+  return `${Buffer.from(email).toString('base64')}.${timestamp}.${signature}`;
+}
+
+function verifyAuthToken(token: string): boolean {
+  if (!token) return false;
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+  const [b64Email, tsStr, signature] = parts;
+  try {
+    const email = Buffer.from(b64Email, 'base64').toString('utf8');
+    const timestamp = parseInt(tsStr, 10);
+    // Token valid for 30 days
+    if (isNaN(timestamp) || Date.now() - timestamp > 30 * 24 * 60 * 60 * 1000) return false;
+    const expectedSig = crypto.createHmac('sha256', AUTH_SECRET).update(`${email}:${timestamp}`).digest('hex');
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig));
+  } catch {
+    return false;
+  }
+}
+
+// Authentication endpoints
+app.post('/api/auth/login', (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  const cleanEmail = (email || '').trim().toLowerCase();
+  const expectedEmail = ADMIN_EMAIL.trim().toLowerCase();
+
+  if (cleanEmail === expectedEmail && password === ADMIN_PASSWORD) {
+    const token = generateAuthToken(cleanEmail);
+    return res.json({ success: true, token, email: cleanEmail });
+  }
+
+  return res.status(401).json({ success: false, error: 'Невірний email або пароль' });
+});
+
+app.get('/api/auth/verify', (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : (req.query.token as string);
+  if (token && verifyAuthToken(token)) {
+    return res.json({ success: true, authenticated: true });
+  }
+  return res.json({ success: false, authenticated: false });
+});
+
 // --- 2. REST API ENDPOINTS ---
 
 // Check Supabase connection

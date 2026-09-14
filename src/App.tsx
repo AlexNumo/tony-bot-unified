@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   MessageSquare, Users, BookOpen, Code2, Sparkles, 
-  ShieldCheck, Heart, User, ExternalLink
+  ShieldCheck, Heart, User, ExternalLink,
+  LogOut
 } from 'lucide-react';
 import { UserStatus, Lesson } from './types';
 import { lessonsData as fallbackLessons } from './data/lessonsData';
@@ -12,13 +13,60 @@ import TelegramSimulator from './components/TelegramSimulator';
 import CRMDashboard from './components/CRMDashboard';
 import CourseMaterials from './components/CourseMaterials';
 import CodeExplorer from './components/CodeExplorer';
+import LoginPage from './components/LoginPage';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'simulator' | 'crm' | 'materials' | 'code'>('simulator');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [adminEmail, setAdminEmail] = useState<string>('');
   const [userStatus, setUserStatus] = useState<UserStatus>('free');
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [lessons, setLessons] = useState<Lesson[]>(fallbackLessons);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token');
+    const savedEmail = localStorage.getItem('admin_email') || '';
+    if (savedEmail) setAdminEmail(savedEmail);
+
+    if (!token) {
+      setIsAuthenticated(false);
+      return;
+    }
+
+    fetch('/api/auth/verify', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('admin_token');
+          setIsAuthenticated(false);
+        }
+      })
+      .catch(() => {
+        // Fallback: stay authenticated if offline or transient error
+        setIsAuthenticated(true);
+      });
+  }, []);
+
+  const handleLoginSuccess = (token: string, email: string) => {
+    localStorage.setItem('admin_token', token);
+    localStorage.setItem('admin_email', email);
+    setAdminEmail(email);
+    setIsAuthenticated(true);
+    showToast(`✨ Вітаємо! Вхід виконано успішно.`);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_email');
+    setIsAuthenticated(false);
+    showToast('Ви вийшли з панелі управління.');
+  };
 
   useEffect(() => {
     fetch('/api/lessons')
@@ -124,6 +172,19 @@ export default function App() {
     showToast(`🚀 Заняття [День ${dayNum}] надіслано в симуляторі!`);
   };
 
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-[#070b12] flex flex-col items-center justify-center space-y-3">
+        <div className="w-8 h-8 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-spin" />
+        <span className="text-xs text-slate-500 font-mono">Перевірка доступу...</span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#070b12] text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-900">
       
@@ -191,17 +252,33 @@ export default function App() {
             </button>
           </nav>
 
-          {/* Quick Support / Instagram link */}
-          <div className="hidden xl:flex items-center gap-3">
+                    {/* Quick Support / Instagram link & Logout */}
+          <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto">
             <a 
               href="https://www.instagram.com/tonypashko" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-[11px] text-slate-400 hover:text-white transition-all flex items-center gap-1"
+              className="hidden xl:flex text-[11px] text-slate-400 hover:text-white transition-all items-center gap-1"
             >
               <span>Антоніна Пашко</span>
               <ExternalLink className="w-3 h-3" />
             </a>
+
+            {adminEmail && (
+              <span className="text-[10px] text-slate-400 hidden md:inline-block font-mono bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
+                {adminEmail}
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Вийти з панелі управління"
+              className="text-[11px] text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 font-semibold cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Вийти</span>
+            </button>
           </div>
 
         </div>
