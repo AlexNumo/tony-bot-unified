@@ -87,7 +87,7 @@ function writeDataFile<T>(filename: string, data: T): void {
 // --- AUTHENTICATION CONFIGURATION & UTILITIES ---
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@tonypashko.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'tony2026';
-const AUTH_SECRET = process.env.AUTH_SECRET || process.env.ADMIN_PASSWORD || 'tony-auth-secret-key-2026';
+const AUTH_SECRET = process.env.AUTH_SECRET || process.env.ADMIN_PASSWORD || crypto.randomBytes(32).toString('hex');
 
 function generateAuthToken(email: string): string {
   const timestamp = Date.now();
