@@ -86,12 +86,12 @@ export async function sendDayMaterial(botOrApi: any, userId: number | string, da
   if (lesson.photoFileId) {
     try {
       await api.sendPhoto(uId, lesson.photoFileId, {
-        caption: "??? �������� ��������: ���� " + dayNum,
+        caption: `🖼️ Додаткові матеріали: День ${dayNum}`,
         protect_content: true
       });
-      await saveMessage(uId, "bot", "[³��������� ���� ��� ��� " + dayNum + "]");
+      await saveMessage(uId, 'bot', `[Відправлено фото для Дня ${dayNum}]`);
     } catch (err) {
-      console.error("Failed to send photo for day " + dayNum + ":", err);
+      console.error(`Failed to send photo for day ${dayNum}:`, err);
     }
   }
 
