@@ -18,16 +18,19 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setError(null);
     setLoading(true);
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
       });
 
       const data = await res.json();
       if (data.success && data.token) {
-        onLoginSuccess(data.token, data.email || email);
+        onLoginSuccess(data.token, data.email || cleanEmail);
       } else {
         setError(data.error || 'Невірний email або пароль');
       }
@@ -86,6 +89,10 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <input 
                 type="email"
                 required
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@example.com"
@@ -103,6 +110,10 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <input 
                 type={showPassword ? 'text' : 'password'}
                 required
+                autoComplete="current-password"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"

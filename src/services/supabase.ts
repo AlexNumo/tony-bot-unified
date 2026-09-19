@@ -73,7 +73,8 @@ export async function addUser(
   lastName?: string,
   utmSource?: string,
   utmMedium?: string,
-  avatarUrl?: string
+  avatarUrl?: string,
+  phone?: string
 ): Promise<any> {
   const uId = String(userId);
   const now = new Date().toISOString();
@@ -92,6 +93,7 @@ export async function addUser(
           username: username || `user_${uId}`,
           first_name: firstName || null,
           last_name: lastName || null,
+          phone: phone || null,
           status: 'free',
           current_day: 1,
           join_date: now,
@@ -108,6 +110,7 @@ export async function addUser(
         if (username) updatePayload.username = username;
         if (firstName) updatePayload.first_name = firstName;
         if (lastName) updatePayload.last_name = lastName;
+        if (phone) updatePayload.phone = phone;
         if (avatarUrl) updatePayload.avatar_url = avatarUrl;
         if (utmSource && !existing.utm_source) updatePayload.utm_source = utmSource;
         if (utmMedium && !existing.utm_medium) updatePayload.utm_medium = utmMedium;
@@ -129,6 +132,7 @@ export async function addUser(
       telegramId: uId,
       username: username || `user_${uId}`,
       name: `${firstName || ''} ${lastName || ''}`.trim() || username || `User ${uId}`,
+      phone,
       status: 'free',
       currentDay: 1,
       completedDays: [],
@@ -141,6 +145,7 @@ export async function addUser(
     localUsers.push(found);
   } else {
     found.lastActivity = now;
+    if (phone) found.phone = phone;
     if (avatarUrl) found.avatar = avatarUrl;
   }
   writeJsonFile('users.json', localUsers);
@@ -526,27 +531,61 @@ export async function checkAndLinkGuestPayment(userId: number | string, phone: s
 
   if (supabase) {
     try {
-      // Find any guest user whose user_id is the guest phone or phone ends with last10
-      const { data: guestUsers } = await supabase
+      // Find any guest user whose phone ends with last10
+      const { data: guestUsers, error } = await supabase
         .from('users')
         .select('*')
-        .or(`user_id.ilike.%${last10}%,phone.ilike.%${last10}%`)
+        .ilike('phone', `%${last10}%`)
         .neq('user_id', String(userId));
 
-      if (guestUsers && guestUsers.length > 0) {
+      if (!error && guestUsers && guestUsers.length > 0) {
         // Find if any had a paid status
         const paidGuest = guestUsers.find(g => ['base', 'support', 'vip'].includes(g.status));
         if (paidGuest) {
           console.log(`🎉 Found paid guest record (${paidGuest.user_id}) with status ${paidGuest.status}! Transferring to ${userId}...`);
           await updateUserStatus(userId, paidGuest.status);
           await updateUserPhone(userId, phone);
+
+          // Transfer leads from the guest to the real user
+          await supabase.from('leads').update({ user_id: String(userId) }).eq('user_id', String(paidGuest.user_id));
+
           // Clean up the temporary guest record
-          await supabase.from('users').delete().eq('user_id', paidGuest.user_id);
+          await supabase.from('users').delete().eq('user_id', String(paidGuest.user_id));
           return paidGuest.status;
         }
       }
     } catch (err) {
-      console.error('Error linking guest payment:', err);
+      console.error('Error linking guest payment in Supabase:', err);
+    }
+  }
+
+  // Local JSON fallback
+  const localUsers = readJsonFile<User[]>('users.json', []);
+  const guestIndex = localUsers.findIndex(
+    u => (u.phone || '').replace(/\D/g, '').endsWith(last10) && u.telegramId !== String(userId)
+  );
+
+  if (guestIndex !== -1) {
+    const paidGuest = localUsers[guestIndex];
+    if (['base', 'support', 'vip'].includes(paidGuest.status)) {
+      console.log(`🎉 Found local paid guest record (${paidGuest.telegramId}) with status ${paidGuest.status}! Transferring to ${userId}...`);
+      await updateUserStatus(userId, paidGuest.status);
+      await updateUserPhone(userId, phone);
+
+      // Clean up local guest user
+      localUsers.splice(guestIndex, 1);
+      writeJsonFile('users.json', localUsers);
+
+      // Update local leads
+      const leads = readJsonFile<Lead[]>('leads.json', []);
+      for (const lead of leads) {
+        if (lead.telegramId === paidGuest.telegramId) {
+          lead.telegramId = String(userId);
+        }
+      }
+      writeJsonFile('leads.json', leads);
+
+      return paidGuest.status;
     }
   }
 

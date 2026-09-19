@@ -33,8 +33,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.resolve(process.cwd(), 'src/data');
 
-// Parse JSON bodies
+// Parse JSON and URL-encoded bodies (WayForPay and form submissions)
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Initialize Telegram bot
 const bot = createBot();
@@ -85,9 +86,10 @@ function writeDataFile<T>(filename: string, data: T): void {
 
 
 // --- AUTHENTICATION CONFIGURATION & UTILITIES ---
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@tonypashko.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'tony2026';
-const AUTH_SECRET = process.env.AUTH_SECRET || process.env.ADMIN_PASSWORD || crypto.randomBytes(32).toString('hex');
+// Strip leading/trailing quotes and whitespace to avoid environment variable mismatch
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@tonypashko.com').replace(/^["']|["']$/g, '').trim().toLowerCase();
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'tony2026').replace(/^["']|["']$/g, '').trim();
+const AUTH_SECRET = (process.env.AUTH_SECRET || process.env.ADMIN_PASSWORD || crypto.randomBytes(32).toString('hex')).replace(/^["']|["']$/g, '').trim();
 
 function generateAuthToken(email: string): string {
   const timestamp = Date.now();
@@ -116,9 +118,9 @@ function verifyAuthToken(token: string): boolean {
 app.post('/api/auth/login', (req: Request, res: Response) => {
   const { email, password } = req.body;
   const cleanEmail = (email || '').trim().toLowerCase();
-  const expectedEmail = ADMIN_EMAIL.trim().toLowerCase();
+  const cleanPassword = (password || '').trim();
 
-  if (cleanEmail === expectedEmail && password === ADMIN_PASSWORD) {
+  if (cleanEmail === ADMIN_EMAIL && cleanPassword === ADMIN_PASSWORD) {
     const token = generateAuthToken(cleanEmail);
     return res.json({ success: true, token, email: cleanEmail });
   }
@@ -330,13 +332,26 @@ app.post('/api/payment/wayforpay-webhook', async (req: Request, res: Response) =
     if (transactionStatus === 'Approved') {
       console.log(`✅ Payment Approved for order ${orderReference} (${amount} ${currency})`);
 
-      // Determine package from orderReference or amount
+      // Determine package from orderReference or amount (EUR or UAH)
       let packageType = 'base';
       const refLower = (orderReference || '').toLowerCase();
-      if (refLower.includes('support') || amount == 125) {
-        packageType = 'support';
-      } else if (refLower.includes('vip') || amount == 400) {
+      const numAmount = Number(amount) || 0;
+      const currUpper = (currency || 'EUR').toUpperCase();
+
+      if (
+        refLower.includes('vip') ||
+        numAmount === 400 ||
+        (currUpper === 'UAH' && numAmount >= 14000)
+      ) {
         packageType = 'vip';
+      } else if (
+        refLower.includes('support') ||
+        numAmount === 125 ||
+        (currUpper === 'UAH' && numAmount >= 4500 && numAmount < 14000)
+      ) {
+        packageType = 'support';
+      } else {
+        packageType = 'base';
       }
 
       // Find user by phone
@@ -366,7 +381,7 @@ app.post('/api/payment/wayforpay-webhook', async (req: Request, res: Response) =
           // Create guest record so user gets access once they connect
           console.log(`ℹ️ User not found in bot for phone ${clientPhone}. Creating guest record...`);
           const guestId = `guest_${last10}`;
-          await addUser(guestId, clientName || 'Guest', '', '', 'wayforpay');
+          await addUser(guestId, clientName || 'Guest', '', '', 'wayforpay', undefined, undefined, clientPhone);
           await updateUserStatus(guestId, packageType);
           await saveLead(guestId, packageType, 'paid');
 
